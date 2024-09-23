@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Swap App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #container {
+            margin: 20px auto;
+        }
+        canvas {
+            display: block;
+            margin: 10px auto;
+            border: 1px solid black;
+        }
+        input[type="file"] {
+            margin: 10px;
+        }
+        #swapBtn {
+            padding: 10px 20px;
+            margin-top: 20px;
+        }
+    </style>
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+</head>
+<body>
+    <h1>Face Swap Application</h1>
+    <div id="container">
+        <input type="file" id="image1" accept="image/*" onchange="loadImage(1)">
+        <input type="file" id="image2" accept="image/*" onchange="loadImage(2)">
+        <br><br>
+        <canvas id="canvas1" width="300" height="300"></canvas>
+        <canvas id="canvas2" width="300" height="300"></canvas>
+        <button id="swapBtn" onclick="swapFaces()">Swap Faces</button>
+    </div>
+
+    <script>
+        let img1 = new Image();
+        let img2 = new Image();
+
+        async function loadModels() {
+            await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
+            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            console.log("Models Loaded!");
+        }
+
+        function loadImage(imageNum) {
+            const reader = new FileReader();
+            const fileInput = imageNum === 1 ? document.getElementById('image1') : document.getElementById('image2');
+            const canvas = imageNum === 1 ? document.getElementById('canvas1') : document.getElementById('canvas2');
+            const ctx = canvas.getContext('2d');
+
+            reader.onload = function (e) {
+                const image = imageNum === 1 ? img1 : img2;
+                image.src = e.target.result;
+                image.onload = function () {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height); // Draw image
+                }
+            };
+
+            if (fileInput.files[0]) {
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        async function swapFaces() {
+            const canvas1 = document.getElementById('canvas1');
+            const canvas2 = document.getElementById('canvas2');
+            const ctx1 = canvas1.getContext('2d');
+            const ctx2 = canvas2.getContext('2d');
+
+            const detection1 = await faceapi.detectSingleFace(canvas1).withFaceLandmarks();
+            const detection2 = await faceapi.detectSingleFace(canvas2).withFaceLandmarks();
+
+            if (!detection1 || !detection2) {
+                alert("Both images must contain detectable faces.");
+                return;
+            }
+
+            const faceLandmarks1 = detection1.landmarks;
+            const faceLandmarks2 = detection2.landmarks;
+
+            // TODO: Swap the faces using the landmarks.
+            // Example: Move facial features, resize, and blend them to match the opposite face.
+            alert('Faces detected but swapping not yet implemented. Work in progress!');
+
+            // Currently, the faces are just detected. You'll need to implement the logic to:
+            // 1. Extract faces based on the landmarks.
+            // 2. Apply transformations (scaling, rotation) so that the faces fit the other image.
+            // 3. Draw the transformed face onto the opposite canvas.
+        }
+
+        window.onload = async () => {
+            await loadModels();
+        }
+    </script>
+</body>
+</html>
